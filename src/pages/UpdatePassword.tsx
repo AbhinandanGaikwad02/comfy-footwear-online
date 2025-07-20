@@ -6,12 +6,12 @@ const UpdatePassword = () => {
   const navigate = useNavigate();
   const [password, setPassword] = useState("");
   const [status, setStatus] = useState("");
-  const [errorFromURL, setErrorFromURL] = useState("");
   const [email, setEmail] = useState("");
   const [resentStatus, setResentStatus] = useState("");
-  const [isSessionLoaded, setIsSessionLoaded] = useState(false);
+  const [errorFromURL, setErrorFromURL] = useState("");
+  const [sessionRestored, setSessionRestored] = useState(false);
 
-  // ✅ Step 1: Check URL hash for auth errors
+  // ✅ 1. Check for expired/invalid token
   useEffect(() => {
     const hash = window.location.hash;
     if (
@@ -24,15 +24,27 @@ const UpdatePassword = () => {
     }
   }, []);
 
-  // ✅ Step 2: Load session from URL hash
+  // ✅ 2. Wait until Supabase restores session from URL
   useEffect(() => {
-    const loadSession = async () => {
-      await supabase.auth.getSession(); // Ensures token is picked from URL
-      setIsSessionLoaded(true);
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "PASSWORD_RECOVERY" && session) {
+        setSessionRestored(true);
+      }
+    });
+
+    // ✅ Manually trigger session fetch
+    supabase.auth.getSession().then(({ data }) => {
+      if (data.session) {
+        setSessionRestored(true);
+      }
+    });
+
+    return () => {
+      authListener.subscription.unsubscribe();
     };
-    loadSession();
   }, []);
 
+  // ✅ 3. Handle password update
   const handleUpdate = async () => {
     if (!password) {
       setStatus("❌ Please enter a new password.");
@@ -42,6 +54,7 @@ const UpdatePassword = () => {
     const { error } = await supabase.auth.updateUser({ password });
 
     if (error) {
+      console.error(error); // helpful for debug
       setStatus("❌ Failed to update password.");
     } else {
       setStatus("✅ Password updated successfully!");
@@ -49,6 +62,7 @@ const UpdatePassword = () => {
     }
   };
 
+  // ✅ 4. Handle resend password reset
   const handleResendReset = async () => {
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: "https://comfy-footwear-online.vercel.app/update-password",
@@ -61,16 +75,16 @@ const UpdatePassword = () => {
     }
   };
 
-  if (!isSessionLoaded) return <p className="text-center mt-10">Verifying token...</p>;
+  if (!sessionRestored && !errorFromURL)
+    return <p className="text-center mt-10">🔐 Verifying reset token...</p>;
 
   return (
-    <div className="max-w-md mx-auto py-10">
+    <div className="max-w-md mx-auto py-10 px-4">
       <h2 className="text-2xl font-bold mb-4">Set New Password</h2>
 
       {errorFromURL ? (
         <>
           <p className="text-red-600 mb-4">{errorFromURL}</p>
-
           <input
             type="email"
             placeholder="Enter your email"
