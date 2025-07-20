@@ -7,7 +7,7 @@ const ForgotPassword = () => {
 
   const handleReset = async () => {
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: "http://localhost:8080/update-password", // Adjust in prod
+      redirectTo: "https://comfy-footwear-online.vercel.app/update-password", // Adjust in prod
     });
 
     if (error) {
