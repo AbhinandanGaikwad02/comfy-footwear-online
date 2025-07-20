@@ -7,9 +7,11 @@ const UpdatePassword = () => {
   const [password, setPassword] = useState("");
   const [status, setStatus] = useState("");
   const [errorFromURL, setErrorFromURL] = useState("");
-  const [email, setEmail] = useState(""); // For resending reset
+  const [email, setEmail] = useState("");
   const [resentStatus, setResentStatus] = useState("");
+  const [isSessionLoaded, setIsSessionLoaded] = useState(false);
 
+  // ✅ Step 1: Check URL hash for auth errors
   useEffect(() => {
     const hash = window.location.hash;
     if (
@@ -22,7 +24,21 @@ const UpdatePassword = () => {
     }
   }, []);
 
+  // ✅ Step 2: Load session from URL hash
+  useEffect(() => {
+    const loadSession = async () => {
+      await supabase.auth.getSession(); // Ensures token is picked from URL
+      setIsSessionLoaded(true);
+    };
+    loadSession();
+  }, []);
+
   const handleUpdate = async () => {
+    if (!password) {
+      setStatus("❌ Please enter a new password.");
+      return;
+    }
+
     const { error } = await supabase.auth.updateUser({ password });
 
     if (error) {
@@ -35,7 +51,7 @@ const UpdatePassword = () => {
 
   const handleResendReset = async () => {
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: "https://comfy-footwear-online.vercel.app/update-password", // ✅ Change this for production
+      redirectTo: "https://comfy-footwear-online.vercel.app/update-password",
     });
 
     if (error) {
@@ -45,6 +61,8 @@ const UpdatePassword = () => {
     }
   };
 
+  if (!isSessionLoaded) return <p className="text-center mt-10">Verifying token...</p>;
+
   return (
     <div className="max-w-md mx-auto py-10">
       <h2 className="text-2xl font-bold mb-4">Set New Password</h2>
@@ -53,7 +71,6 @@ const UpdatePassword = () => {
         <>
           <p className="text-red-600 mb-4">{errorFromURL}</p>
 
-          {/* 🔁 Resend Reset Link */}
           <input
             type="email"
             placeholder="Enter your email"
@@ -71,7 +88,6 @@ const UpdatePassword = () => {
         </>
       ) : (
         <>
-          {/* ✅ Show only if link is valid */}
           <input
             type="password"
             placeholder="New password"
