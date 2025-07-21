@@ -1,33 +1,41 @@
-// /api/send-status-email.ts (Vercel API Route)
-export default async function handler(req, res) {
+// /api/send-status-email.ts (Vercel API route)
+
+import type { VercelRequest, VercelResponse } from '@vercel/node';
+
+export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  const { email, name, status, orderId } = req.body;
+  const { name, email, status, orderId } = req.body;
 
   try {
-    const response = await fetch("https://api.resend.com/emails", {
+    const response = await fetch("https://api.emailjs.com/api/v1.0/email/send", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: "Footwear Store <onboarding@resend.dev>", // ✅ TEMP TESTING SENDER
-        to: [email],
-        subject: `Order #${orderId} Status Updated`,
-        html: `<p>Hi ${name},<br />Your order status has been updated to <strong>${status}</strong>.<br />Thanks for shopping with us!</p>`,
+        service_id: process.env.VITE_EMAILJS_SERVICE_ID,
+        template_id: "template_s6tyf2f",
+        user_id: process.env.VITE_EMAILJS_USER_ID,
+        template_params: {
+          name,
+          email,
+          status,
+          orderId,
+        },
       }),
     });
 
     const data = await response.json();
+
     if (!response.ok) {
-      console.error("❌ Failed to send email:", data);
-      return res.status(500).json({ error: "Failed to send email", detail: data });
+      console.error("❌ Failed to send EmailJS email:", data);
+      return res.status(500).json({ error: "EmailJS error", detail: data });
     }
 
-    console.log("✅ Email sent:", data);
+    console.log("✅ Email sent via EmailJS:", data);
     return res.status(200).json({ success: true });
   } catch (error) {
     console.error("❌ Error sending email:", error);
