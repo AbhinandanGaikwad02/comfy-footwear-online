@@ -19,6 +19,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     hour12: true,
   });
 
+  console.log("📨 Sending EmailJS with:", {
+    email, name, status, orderId, time: now,
+  });
+
+  console.log("🔐 ENV:", {
+    EMAILJS_SERVICE_ID: process.env.EMAILJS_SERVICE_ID,
+    EMAILJS_TEMPLATE_ID: process.env.EMAILJS_TEMPLATE_ID,
+    EMAILJS_USER_ID: process.env.EMAILJS_USER_ID,
+  });
+
   try {
     const result = await emailjs.send(
       process.env.EMAILJS_SERVICE_ID!,
@@ -28,10 +38,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         user_name: name,
         order_status: status,
         order_id: orderId,
-        email,                 // for replyTo
-        name,                  // for optional block
-        time: now,             // show when update happened
-        message: `Your order was marked as ${status}.`, // optional custom message
+        email,
+        name,
+        time: now,
+        message: `Your order was marked as ${status}.`,
       },
       {
         publicKey: process.env.EMAILJS_USER_ID!,
@@ -41,7 +51,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     console.log('✅ Email sent:', result.status);
     return res.status(200).json({ success: true, status: result.status });
   } catch (err: any) {
-    console.error('❌ EmailJS error:', err.text || err.message);
-    return res.status(500).json({ error: 'Email sending failed' });
+    console.error('❌ EmailJS error:', err);
+    return res.status(500).json({ error: 'Email sending failed', detail: err });
   }
 }
