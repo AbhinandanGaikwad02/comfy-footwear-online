@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import emailjs from '@emailjs/nodejs';
+import * as emailjs from '@emailjs/nodejs'; // ✅ changed
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
@@ -21,12 +21,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   console.log("📨 Sending EmailJS with:", {
     email, name, status, orderId, time: now,
-  });
-
-  console.log("🔐 ENV:", {
-    EMAILJS_SERVICE_ID: process.env.EMAILJS_SERVICE_ID,
-    EMAILJS_TEMPLATE_ID: process.env.EMAILJS_TEMPLATE_ID,
-    EMAILJS_USER_ID: process.env.EMAILJS_USER_ID,
   });
 
   try {
@@ -51,7 +45,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     console.log('✅ Email sent:', result.status);
     return res.status(200).json({ success: true, status: result.status });
   } catch (err: any) {
-    console.error('❌ EmailJS error:', err);
+    console.error('❌ EmailJS error:', err?.text || err?.message || err);
     return res.status(500).json({ error: 'Email sending failed', detail: err });
   }
 }
