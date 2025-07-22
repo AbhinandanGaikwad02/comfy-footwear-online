@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@emailjs/browser": "^4.4.1",
+    "@emailjs/nodejs": "^5.0.2",
     "@hookform/resolvers": "^3.9.0",
     "@paypal/react-paypal-js": "^8.8.3",
     "@radix-ui/react-accordion": "^1.2.0",
