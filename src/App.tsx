@@ -27,6 +27,7 @@ import UpdatePassword from "./pages/UpdatePassword";
 import Profile from "@/pages/Profile";
 import Terms from "@/pages/Terms";
 import Privacy from "@/pages/Privacy";
+import Snowfall from "react-snowfall";
 
 
 
@@ -38,6 +39,17 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
+      {/* 🎄 Snowfall Effect */}
+        <Snowfall
+          color="rgb(59 130 246)"
+          style={{
+            position: "fixed",
+            width: "100vw",
+            height: "100vh",
+            zIndex: 50,
+            pointerEvents: "none",
+          }}
+        />
       <AuthProvider>
         <Routes>
   <Route path="/" element={<Index />} />
